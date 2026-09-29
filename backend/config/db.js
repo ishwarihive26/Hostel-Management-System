@@ -6,7 +6,19 @@ const sqlite3 = require('sqlite3');
 const dialect = (process.env.DB_DIALECT || 'sqlite').toLowerCase();
 
 let sequelize;
-if (dialect === 'mysql') {
+
+if (dialect === 'postgres' || dialect === 'postgresql') {
+  sequelize = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'postgres',
+    logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
+  });
+} else if (dialect === 'mysql') {
   sequelize = new Sequelize(
     process.env.DB_NAME || 'hostelhub',
     process.env.DB_USER || 'root',
@@ -30,9 +42,10 @@ if (dialect === 'mysql') {
   });
 }
 
-// Creates the MySQL database if it does not exist yet (SQLite needs nothing).
+// Creates the MySQL database if it does not exist yet.
 const ensureMysqlDatabase = async () => {
   const mysql = require('mysql2/promise');
+
   const conn = await mysql.createConnection({
     host: process.env.DB_HOST || '127.0.0.1',
     port: Number(process.env.DB_PORT) || 3306,
@@ -50,9 +63,12 @@ const ensureMysqlDatabase = async () => {
 // connectDB({ force: true }) drops and recreates all tables (used by seed.js)
 const connectDB = async ({ force = false } = {}) => {
   try {
-    if (dialect === 'mysql') await ensureMysqlDatabase();
+    if (dialect === 'mysql') {
+      await ensureMysqlDatabase();
+    }
 
     require('../models');
+
     await sequelize.authenticate();
     await sequelize.sync({ force });
 
@@ -64,4 +80,5 @@ const connectDB = async ({ force = false } = {}) => {
 };
 
 connectDB.sequelize = sequelize;
+
 module.exports = connectDB;
