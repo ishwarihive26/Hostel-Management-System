@@ -3,7 +3,8 @@
   "functions": {
     "server.js": {
       "includeFiles": [
-        "node_modules/sqlite3/lib/binding/**"
+        "node_modules/sqlite3/lib/binding/**",
+        "node_modules/sqlite3/build/Release/**"
       ]
     }
   }
