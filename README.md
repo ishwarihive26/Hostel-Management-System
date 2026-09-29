@@ -191,3 +191,5 @@ automatically by the frontend after login/register.
   submit/resolve.
 - Passwords are hashed with bcrypt; JWTs expire after 7 days by default
   (`JWT_EXPIRES_IN` in `backend/.env`).
+#   r e d e p l o y  
+ 
