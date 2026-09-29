@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const { Sequelize } = require('sequelize');
+const sqlite3 = require('sqlite3');
 
 const dialect = (process.env.DB_DIALECT || 'sqlite').toLowerCase();
 
@@ -20,7 +21,13 @@ if (dialect === 'mysql') {
 } else {
   const storage = process.env.SQLITE_PATH || '/tmp/hostelhub.sqlite';
   fs.mkdirSync('/tmp', { recursive: true });
-  sequelize = new Sequelize({ dialect: 'sqlite', storage, logging: false });
+
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage,
+    logging: false,
+    dialectModule: sqlite3,
+  });
 }
 
 // Creates the MySQL database if it does not exist yet (SQLite needs nothing).
@@ -32,7 +39,11 @@ const ensureMysqlDatabase = async () => {
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
   });
-  await conn.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'hostelhub'}\``);
+
+  await conn.query(
+    `CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'hostelhub'}\``
+  );
+
   await conn.end();
 };
 
@@ -40,9 +51,11 @@ const ensureMysqlDatabase = async () => {
 const connectDB = async ({ force = false } = {}) => {
   try {
     if (dialect === 'mysql') await ensureMysqlDatabase();
-    require('../models'); // registers models + associations
+
+    require('../models');
     await sequelize.authenticate();
     await sequelize.sync({ force });
+
     console.log(`SQL database connected (${dialect})`);
   } catch (err) {
     console.error(`Database connection error: ${err.message}`);
