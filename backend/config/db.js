@@ -18,8 +18,8 @@ if (dialect === 'mysql') {
     }
   );
 } else {
-  const storage = path.resolve(__dirname, '..', process.env.SQLITE_PATH || 'database/hostelhub.sqlite');
-  fs.mkdirSync(path.dirname(storage), { recursive: true });
+  const storage = process.env.SQLITE_PATH || '/tmp/hostelhub.sqlite';
+  fs.mkdirSync('/tmp', { recursive: true });
   sequelize = new Sequelize({ dialect: 'sqlite', storage, logging: false });
 }
 
