@@ -8,8 +8,11 @@ const dialect = (process.env.DB_DIALECT || 'sqlite').toLowerCase();
 let sequelize;
 
 if (dialect === 'postgres' || dialect === 'postgresql') {
+  const pg = require('pg');
+
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
+    dialectModule: pg,
     logging: false,
     dialectOptions: {
       ssl: {
