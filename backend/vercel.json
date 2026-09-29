@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "server.js": {
+      "includeFiles": [
+        "node_modules/sqlite3/lib/binding/**"
+      ]
+    }
+  }
+}
