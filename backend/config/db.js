@@ -56,8 +56,9 @@ const connectDB = async ({ force = false } = {}) => {
     console.log(`SQL database connected (${dialect})`);
   } catch (err) {
     console.error(`Database connection error: ${err.message}`);
-    // On Vercel, exiting kills the function and hides the real error behind a CORS failure.
-    if (!process.env.VERCEL) process.exit(1);
+    // On Vercel, exiting kills the function; throw so the request returns the real error instead.
+    if (process.env.VERCEL) throw err;
+    process.exit(1);
   }
 };
 
