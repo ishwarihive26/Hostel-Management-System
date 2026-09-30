@@ -17,9 +17,31 @@ app.use(
 );
 app.use(express.json());
 
-// Health check
+// Health check (does not need the database)
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'HostelHub API is running' });
+});
+
+// Make sure the database is connected and tables exist before any route runs.
+// On serverless (Vercel) there is no "startup" phase, so we do it lazily per cold start.
+let dbPromise = null;
+const ensureDb = () => {
+  if (!dbPromise) {
+    dbPromise = connectDB().catch((err) => {
+      dbPromise = null; // allow retry on the next request
+      throw err;
+    });
+  }
+  return dbPromise;
+};
+
+app.use(async (req, res, next) => {
+  try {
+    await ensureDb();
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Routes
@@ -40,13 +62,13 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-const start = async () => {
-  await connectDB();
-  app.listen(PORT, () => {
-    console.log(`HostelHub API listening on http://localhost:${PORT}`);
+// Only start a listener locally; Vercel runs the exported app as a function.
+if (!process.env.VERCEL) {
+  ensureDb().then(() => {
+    app.listen(PORT, () => {
+      console.log(`HostelHub API listening on http://localhost:${PORT}`);
+    });
   });
-};
-
-start();
+}
 
 module.exports = app;
